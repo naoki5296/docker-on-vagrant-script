@@ -1,0 +1,47 @@
+version: '3.8'
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+volumes:
+  mysql-volume:
+services:
+### Apache Server ########################################
+    apache2:
+      build:      
+        context: ./apache2
+      volumes:
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        - ${APACHE_HOST_LOG_PATH}:/var/log/apache2
+        - /vagrant_contents:/var/www/html
+      ports:
+        - "80:80"
+        - "5173:5173"
+        - "${APACHE_HOST_HTTPS_PORT}:443"
+        - '2222:22'
+      depends_on:
+        - mysql
+      working_dir: /var/www/html
+      privileged: true
+      command: /sbin/init
+      networks:
+        - frontend
+        - backend
+
+### MySQL ################################################
+    mysql:
+      build:      
+        context: ./mysql
+      volumes:
+        - ./mysql/db:/docker-entrypoint-initdb.d  #初期データをマウントする場所
+      environment:
+        MYSQL_DATABASE: database
+        MYSQL_USER: user
+        MYSQL_PASSWORD: password
+        MYSQL_ROOT_PASSWORD: password
+        TZ: 'Asia/Tokyo'
+      ports:
+        - "3306:3306"
+      networks:
+        - backend

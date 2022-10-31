@@ -1,0 +1,3 @@
+dir="/run/php-fpm/"
+mkdir $dir
+chown apache:apache $dir
